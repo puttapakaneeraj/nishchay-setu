@@ -1,21 +1,54 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/integrations/supabase/client';
+import JobRecommendations from './JobRecommendations';
+import CareerRoadmap from './CareerRoadmap';
 import { 
-  Sparkles, 
-  Brain, 
-  Target, 
-  Users, 
-  Lightbulb, 
-  Heart,
-  ArrowRight,
-  Download,
+  Trophy, 
+  TrendingUp, 
+  BookOpen, 
+  Download, 
+  RotateCcw,
+  Sparkles,
+  GraduationCap,
   MapPin,
-  Star,
-  TrendingUp
+  Star
 } from 'lucide-react';
+
+interface QuizResults {
+  topCategory: string;
+  scores: {
+    builder: number;
+    analyst: number;
+    creator: number;
+    helper: number;
+  };
+}
+
+interface QuizResultsProps {
+  results: QuizResults;
+  onStartOver: () => void;
+  onExploreColleges: () => void;
+}
+
+interface CareerPathway {
+  id: string;
+  pathway_name: string;
+  stream: string;
+  degree_program: string;
+  description: string;
+  duration: string;
+  immediate_jobs: any;
+  higher_studies: any;
+  govt_jobs: any;
+  roadmap_steps: any;
+  cluster_id?: string;
+  colleges?: any;
+  created_at?: string;
+}
 
 interface CareerCluster {
   name: string;
@@ -31,7 +64,7 @@ const careerClusters: Record<string, CareerCluster> = {
   builder: {
     name: "The Builder",
     description: "You love creating tangible solutions and leading projects to completion",
-    icon: Target,
+    icon: Trophy,
     color: "from-orange-500 to-red-500",
     streams: ["Science (PCM)", "Commerce", "Vocational"],
     careers: ["Engineer", "Architect", "Project Manager", "Entrepreneur", "Civil Services"],
@@ -40,7 +73,7 @@ const careerClusters: Record<string, CareerCluster> = {
   analyst: {
     name: "The Analyst", 
     description: "You excel at problem-solving and working with data and systems",
-    icon: Brain,
+    icon: BookOpen,
     color: "from-blue-500 to-purple-500",
     streams: ["Science (PCM/PCB)", "Commerce with Math"],
     careers: ["Data Scientist", "CA/CS", "Research Scientist", "Banking Professional", "Statistician"],
@@ -49,7 +82,7 @@ const careerClusters: Record<string, CareerCluster> = {
   creator: {
     name: "The Creator",
     description: "You bring imagination to life through art, design, and innovation",
-    icon: Lightbulb,
+    icon: Sparkles,
     color: "from-pink-500 to-violet-500",
     streams: ["Arts", "Fine Arts", "Mass Communication"],
     careers: ["Graphic Designer", "Writer", "Filmmaker", "Marketing Professional", "Teacher"],
@@ -58,7 +91,7 @@ const careerClusters: Record<string, CareerCluster> = {
   helper: {
     name: "The Helper",
     description: "You find fulfillment in supporting and caring for others",
-    icon: Heart,
+    icon: GraduationCap,
     color: "from-green-500 to-teal-500",
     streams: ["Arts", "Science (PCB)", "Social Work"],
     careers: ["Doctor", "Psychologist", "Social Worker", "Counselor", "Public Administration"],
@@ -66,26 +99,53 @@ const careerClusters: Record<string, CareerCluster> = {
   }
 };
 
-const QuizResults = ({ 
-  results, 
-  onStartOver, 
-  onExploreColleges 
-}: { 
-  results: any; 
-  onStartOver: () => void;
-  onExploreColleges: () => void;
-}) => {
+const QuizResults: React.FC<QuizResultsProps> = ({ results, onStartOver, onExploreColleges }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [animationStep, setAnimationStep] = useState(0);
+  const [careerPathways, setCareerPathways] = useState<CareerPathway[]>([]);
+  const [selectedPathway, setSelectedPathway] = useState<CareerPathway | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setIsVisible(true);
     const timer = setInterval(() => {
-      setAnimationStep(prev => prev + 1);
-    }, 600);
+      setAnimationStep(prev => (prev + 1) % 4);
+    }, 800);
+    
+    fetchCareerPathways();
     
     return () => clearInterval(timer);
-  }, []);
+  }, [results.topCategory]);
+
+  const fetchCareerPathways = async () => {
+    try {
+      setLoading(true);
+      
+      // Get cluster ID for the top category
+      const { data: clusters } = await supabase
+        .from('career_clusters')
+        .select('id')
+        .eq('name', results.topCategory.charAt(0).toUpperCase() + results.topCategory.slice(1))
+        .single();
+
+      if (clusters) {
+        // Fetch pathways for this cluster
+        const { data: pathways } = await supabase
+          .from('career_pathways')
+          .select('*')
+          .eq('cluster_id', clusters.id);
+
+        if (pathways) {
+          setCareerPathways(pathways as CareerPathway[]);
+          setSelectedPathway(pathways[0] as CareerPathway || null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching career pathways:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const cluster = careerClusters[results.topCategory];
   const secondaryScores = Object.entries(results.scores)
@@ -95,7 +155,7 @@ const QuizResults = ({
 
   return (
     <div className="min-h-screen p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className={`text-center mb-12 ${isVisible ? 'animate-slide-up' : 'opacity-0'}`}>
           <div className="inline-flex items-center space-x-2 mb-4">
@@ -166,71 +226,83 @@ const QuizResults = ({
           </div>
         </Card>
 
-        {/* Career Opportunities */}
-        <Card className={`glass-card p-8 mb-8 ${animationStep >= 3 ? 'animate-slide-up' : 'opacity-0'}`}>
-          <h3 className="text-2xl font-bold text-gradient mb-6 flex items-center">
-            <Target className="w-6 h-6 mr-2" />
-            Your Career Opportunities
-          </h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cluster.careers.map((career, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
-                className="p-3 text-sm justify-center hover-lift glass-card"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {career}
-              </Badge>
-            ))}
+        {/* Career Pathways Selection */}
+        {!loading && careerPathways.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold text-center mb-4 text-gradient">
+              🎯 Recommended Career Pathways
+            </h3>
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
+              {careerPathways.map((pathway) => (
+                <Button
+                  key={pathway.id}
+                  variant={selectedPathway?.id === pathway.id ? "default" : "outline"}
+                  onClick={() => setSelectedPathway(pathway)}
+                  className="transition-all duration-300 hover:scale-105"
+                >
+                  {pathway.pathway_name}
+                </Button>
+              ))}
+            </div>
           </div>
-        </Card>
+        )}
 
-        {/* Secondary Traits */}
-        <Card className={`glass-card p-8 mb-8 ${animationStep >= 4 ? 'animate-slide-up' : 'opacity-0'}`}>
-          <h3 className="text-2xl font-bold text-gradient mb-6">
-            Your Other Strengths
-          </h3>
-          <div className="space-y-4">
-            {secondaryScores.map(([category, score], index) => (
-              <div key={category} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium capitalize">{category}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(((score as number) / 5) * 100)}%
-                  </span>
-                </div>
-                <Progress value={((score as number) / 5) * 100} className="h-2" />
-              </div>
-            ))}
+        {/* Job Recommendations and Roadmap */}
+        {selectedPathway && (
+          <div className="mt-8 space-y-8">
+            <JobRecommendations
+              immediateJobs={selectedPathway.immediate_jobs || {}}
+              higherStudies={selectedPathway.higher_studies || {}}
+              govtJobs={selectedPathway.govt_jobs || {}}
+              pathwayName={selectedPathway.pathway_name}
+            />
+            
+            <CareerRoadmap
+              steps={Array.isArray(selectedPathway.roadmap_steps) ? selectedPathway.roadmap_steps : []}
+              pathwayName={selectedPathway.pathway_name}
+            />
           </div>
-        </Card>
+        )}
 
         {/* Action Buttons */}
-        <div className={`flex flex-col sm:flex-row gap-4 justify-center ${animationStep >= 5 ? 'animate-slide-up' : 'opacity-0'}`}>
-          <Button size="lg" onClick={onExploreColleges} className="group gradient-primary text-white font-semibold px-8 py-4 rounded-xl hover-lift shadow-float">
-            Explore Local Colleges
-            <MapPin className="ml-2 w-5 h-5 group-hover:animate-bounce" />
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <Button 
+            onClick={onExploreColleges}
+            className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg transform hover:scale-105 transition-all duration-300"
+            size="lg"
+          >
+            <MapPin className="w-5 h-5 mr-2" />
+            Explore Colleges
           </Button>
           
-          <Button variant="outline" size="lg" className="glass-card border-primary/30 text-primary hover:bg-primary/10 px-8 py-4 rounded-xl">
+          <Button 
+            variant="outline"
+            className="border-primary/30 hover:bg-primary/10 shadow-md transform hover:scale-105 transition-all duration-300"
+            size="lg"
+          >
+            <Download className="w-5 h-5 mr-2" />
             Download Report
-            <Download className="ml-2 w-5 h-5" />
           </Button>
           
-          <Button variant="outline" size="lg" onClick={onStartOver} className="glass-card border-muted/30 px-8 py-4 rounded-xl">
+          <Button 
+            onClick={onStartOver}
+            variant="secondary"
+            className="shadow-md transform hover:scale-105 transition-all duration-300"
+            size="lg"
+          >
+            <RotateCcw className="w-5 h-5 mr-2" />
             Take Quiz Again
-            <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
 
         {/* Encouraging Message */}
-        <div className={`text-center mt-12 ${animationStep >= 6 ? 'animate-slide-up' : 'opacity-0'}`}>
-          <p className="text-lg text-gradient font-medium">
-            "Every expert was once a beginner. Your journey starts here! 🌟"
+        <div className="text-center mt-8 p-6 bg-gradient-to-r from-success/10 to-primary/10 rounded-2xl border border-success/20">
+          <Sparkles className="w-8 h-8 text-success mx-auto mb-3" />
+          <p className="text-lg font-medium text-success mb-2">
+            Your journey to success starts here! 🚀
           </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Ready to chat with Dost for more personalized guidance?
+          <p className="text-muted-foreground">
+            Remember, every expert was once a beginner. Take the first step with confidence!
           </p>
         </div>
       </div>

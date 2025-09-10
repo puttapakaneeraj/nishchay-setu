@@ -1,18 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Sparkles, 
-  MessageCircle,
-  Mic,
-  Languages
-} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Send, Bot, User, Globe } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -26,33 +19,42 @@ const predefinedQuestions = [
   { 
     text: "12th science ke baad kya karu?", 
     translation: "What should I do after 12th science?",
-    language: "hi" 
+    language: "hindi" 
   },
   { 
     text: "Commerce stream mein kya scope hai?", 
     translation: "What scope is there in commerce stream?",
-    language: "hi" 
+    language: "hindi" 
   },
   { 
     text: "Nearest government college kaha hai?", 
     translation: "Where is the nearest government college?",
-    language: "hi" 
+    language: "hindi" 
   },
   { 
     text: "Arts degree worth hai kya?", 
     translation: "Is an arts degree worth it?",
-    language: "hi" 
+    language: "hindi" 
+  },
+  {
+    text: "What are the best engineering branches?",
+    translation: "What are the best engineering branches?",
+    language: "english"
+  },
+  {
+    text: "Government jobs after graduation?",
+    translation: "Government jobs after graduation?", 
+    language: "english"
   }
 ];
 
-const botResponses: Record<string, string> = {
-  "12th science ke baad kya karu?": "Great question! Science ke baad aapke paas bohot options hain:\n\n🔬 Engineering (B.Tech/B.E.)\n⚕️ Medical (MBBS/BDS/BAMS)\n🧪 Pure Sciences (B.Sc Physics/Chemistry/Biology)\n📊 Applied Sciences (B.Sc IT/Computer Science)\n\nAapka interest kya hai? Main aapko specific guidance de sakta hun!",
-  
-  "commerce stream mein kya scope hai?": "Commerce mein excellent scope hai! 📈\n\n💼 Business & Management\n📊 Chartered Accountancy (CA)\n🏦 Banking & Finance\n📋 Company Secretary (CS)\n💰 Investment Banking\n🎯 Digital Marketing\n\nGovernment jobs bhi bohot hain - Bank PO, SSC, Railways. Kya specific field mein interested ho?",
-  
-  "nearest government college kaha hai?": "Main aapko nearest government colleges find karne mein help kar sakta hun! 📍\n\nAapka location batayiye:\n🏫 Degree Colleges\n🎓 Engineering Colleges  \n⚕️ Medical Colleges\n📚 Arts & Science Colleges\n\nLocation share kariye ya city name batayiye, main exact colleges suggest karunga!",
-  
-  "arts degree worth hai kya?": "Bilkul worth hai! Arts degree ke fayde:\n\n✅ Versatile career options\n📝 Civil Services (IAS/IPS)\n👨‍🏫 Teaching & Education\n📰 Journalism & Media\n🎨 Creative Industries\n💼 Management roles\n\nGovernment colleges mein fees bhi kam hai. Specific subject mein interest hai kya?"
+const getRandomResponse = () => {
+  const responses = [
+    "That's a great question! Let me help you with career guidance. 🎯",
+    "Interesting! I can provide you with detailed information about this. 📚",
+    "Perfect question for career planning! Let me give you comprehensive guidance. 🚀"
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
 };
 
 const ChatBot = () => {
@@ -60,14 +62,14 @@ const ChatBot = () => {
     {
       id: '1',
       type: 'bot',
-      content: 'नमस्ते! मैं Dost हूँ, आपका career guidance friend! 🤖✨\n\nMain aapki career aur education ki saari queries solve kar sakta hun. Kya jaanna chahte hain?',
+      content: 'नमस्ते! मैं Dost हूँ, आपका AI career guidance friend! 🤖✨\n\nI can help you with:\n• Career guidance in Hindi/English/Telugu\n• College recommendations\n• Stream selection advice\n• Government job information\n\nWhat would you like to know?',
       timestamp: new Date(),
-      language: 'hi'
+      language: 'hindi'
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('hi');
+  const [selectedLanguage, setSelectedLanguage] = useState('hindi');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -84,30 +86,55 @@ const ChatBot = () => {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content,
-      timestamp: new Date()
+      content: content,
+      timestamp: new Date(),
+      language: selectedLanguage
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const response = botResponses[content] || 
-        `Main samjha ki aap "${content}" ke baare mein pooch rahe hain. 🤔\n\nYe topic thoda complex hai, lekin main aapki help kar sakta hun! Kya aap:\n\n1️⃣ Specific colleges ke baare mein jaanna chahte hain?\n2️⃣ Career options explore karna chahte hain?\n3️⃣ Admission process understand karna chahte hain?\n\nBataiye, main detailed guidance dunga! 😊`;
+    try {
+      // Call the advanced chat edge function
+      const { data, error } = await supabase.functions.invoke('advanced-chat', {
+        body: {
+          message: content,
+          language: selectedLanguage
+        }
+      });
 
-      const botMessage: Message = {
+      if (error) throw error;
+
+      const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: response,
+        content: data.response || data.fallbackResponse || getRandomResponse(),
         timestamp: new Date(),
-        language: 'hi'
+        language: selectedLanguage
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      
+      // Fallback response
+      const fallbackResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: selectedLanguage === 'hindi' 
+          ? 'माफ करें, मुझे कुछ तकनीकी समस्या हो रही है। कृपया बाद में कोशिश करें।'
+          : selectedLanguage === 'telugu' 
+          ? 'క్షమించండి, నాకు కొంత సాంకేతిక సమస్య ఉంది. దయచేసి తర్వాత ప్రయత్నించండి.'
+          : 'Sorry, I\'m experiencing some technical difficulties. Please try again later.',
+        timestamp: new Date(),
+        language: selectedLanguage
+      };
+
+      setMessages(prev => [...prev, fallbackResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleQuestionClick = (question: string) => {
@@ -125,30 +152,30 @@ const ChatBot = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gradient">Meet Dost 🤖</h1>
-              <p className="text-muted-foreground">Your friendly career guidance assistant</p>
+              <p className="text-muted-foreground">Your AI-powered career guidance assistant</p>
             </div>
           </div>
 
           {/* Language Selector */}
           <div className="flex justify-center space-x-2 mb-6">
             <Badge 
-              variant={selectedLanguage === 'hi' ? 'default' : 'outline'}
+              variant={selectedLanguage === 'hindi' ? 'default' : 'outline'}
               className="cursor-pointer hover-lift"
-              onClick={() => setSelectedLanguage('hi')}
+              onClick={() => setSelectedLanguage('hindi')}
             >
               हिंदी
             </Badge>
             <Badge 
-              variant={selectedLanguage === 'en' ? 'default' : 'outline'}
+              variant={selectedLanguage === 'english' ? 'default' : 'outline'}
               className="cursor-pointer hover-lift"
-              onClick={() => setSelectedLanguage('en')}
+              onClick={() => setSelectedLanguage('english')}
             >
               English
             </Badge>
             <Badge 
-              variant={selectedLanguage === 'te' ? 'default' : 'outline'}
+              variant={selectedLanguage === 'telugu' ? 'default' : 'outline'}
               className="cursor-pointer hover-lift"
-              onClick={() => setSelectedLanguage('te')}
+              onClick={() => setSelectedLanguage('telugu')}
             >
               తెలుగు
             </Badge>
@@ -217,11 +244,13 @@ const ChatBot = () => {
           {/* Quick Questions */}
           <div className="px-6 py-4 border-t border-border/10">
             <div className="text-sm text-muted-foreground mb-3 flex items-center">
-              <Sparkles className="w-4 h-4 mr-1" />
+              <Globe className="w-4 h-4 mr-1" />
               Quick questions to get started:
             </div>
             <div className="flex flex-wrap gap-2">
-              {predefinedQuestions.map((q, index) => (
+              {predefinedQuestions
+                .filter(q => q.language === selectedLanguage)
+                .map((q, index) => (
                 <Button
                   key={index}
                   variant="outline"
@@ -241,7 +270,7 @@ const ChatBot = () => {
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Type your question... (Hindi, English, Telugu supported)"
+                placeholder={`Type your question in ${selectedLanguage}...`}
                 className="flex-1 glass-card border-primary/20 focus:border-primary/40"
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage(inputValue)}
               />
