@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      career_clusters: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          streams: string[] | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          streams?: string[] | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          streams?: string[] | null
+        }
+        Relationships: []
+      }
+      career_pathways: {
+        Row: {
+          cluster_id: string | null
+          colleges: Json | null
+          created_at: string
+          degree_program: string | null
+          description: string | null
+          duration: string | null
+          govt_jobs: Json | null
+          higher_studies: Json | null
+          id: string
+          immediate_jobs: Json | null
+          pathway_name: string
+          roadmap_steps: Json | null
+          stream: string
+        }
+        Insert: {
+          cluster_id?: string | null
+          colleges?: Json | null
+          created_at?: string
+          degree_program?: string | null
+          description?: string | null
+          duration?: string | null
+          govt_jobs?: Json | null
+          higher_studies?: Json | null
+          id?: string
+          immediate_jobs?: Json | null
+          pathway_name: string
+          roadmap_steps?: Json | null
+          stream: string
+        }
+        Update: {
+          cluster_id?: string | null
+          colleges?: Json | null
+          created_at?: string
+          degree_program?: string | null
+          description?: string | null
+          duration?: string | null
+          govt_jobs?: Json | null
+          higher_studies?: Json | null
+          id?: string
+          immediate_jobs?: Json | null
+          pathway_name?: string
+          roadmap_steps?: Json | null
+          stream?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_pathways_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "career_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colleges: {
+        Row: {
+          contact_info: Json | null
+          coordinates: Json | null
+          created_at: string
+          fees: Json | null
+          id: string
+          location: string | null
+          name: string
+          programs: string[] | null
+          type: string | null
+        }
+        Insert: {
+          contact_info?: Json | null
+          coordinates?: Json | null
+          created_at?: string
+          fees?: Json | null
+          id?: string
+          location?: string | null
+          name: string
+          programs?: string[] | null
+          type?: string | null
+        }
+        Update: {
+          contact_info?: Json | null
+          coordinates?: Json | null
+          created_at?: string
+          fees?: Json | null
+          id?: string
+          location?: string | null
+          name?: string
+          programs?: string[] | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          grade: string | null
+          id: string
+          location: string | null
+          name: string | null
+          quiz_completed: boolean | null
+          quiz_scores: Json | null
+          top_career_cluster: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          grade?: string | null
+          id?: string
+          location?: string | null
+          name?: string | null
+          quiz_completed?: boolean | null
+          quiz_scores?: Json | null
+          top_career_cluster?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          grade?: string | null
+          id?: string
+          location?: string | null
+          name?: string | null
+          quiz_completed?: boolean | null
+          quiz_scores?: Json | null
+          top_career_cluster?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
