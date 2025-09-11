@@ -4,6 +4,7 @@ import LandingPage from '@/components/LandingPage';
 import Quiz from '@/components/Quiz';
 import QuizResults from '@/components/QuizResults';
 import ChatBot from '@/components/ChatBot';
+import CourseExplorer from '@/components/CourseExplorer';
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState('home');
@@ -19,9 +20,8 @@ const Index = () => {
     setCurrentPage('quiz');
   };
 
-  const handleExploreColleges = () => {
-    // TODO: Implement college explorer
-    setCurrentPage('colleges');
+  const handleExploreCourses = () => {
+    setCurrentPage('courses');
   };
 
   const renderCurrentPage = () => {
@@ -35,20 +35,13 @@ const Index = () => {
           <QuizResults 
             results={quizResults} 
             onStartOver={handleStartOver}
-            onExploreColleges={handleExploreColleges}
+            onExploreCourses={handleExploreCourses}
           />
         ) : <LandingPage />;
       case 'chat':
         return <ChatBot />;
-      case 'colleges':
-        return (
-          <div className="min-h-screen flex items-center justify-center p-6">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gradient mb-4">College Explorer</h1>
-              <p className="text-xl text-muted-foreground">Coming Soon! 🎓</p>
-            </div>
-          </div>
-        );
+      case 'courses':
+        return <CourseExplorer />;
       default:
         return <LandingPage />;
     }

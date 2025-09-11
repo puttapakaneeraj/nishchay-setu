@@ -31,7 +31,7 @@ interface QuizResults {
 interface QuizResultsProps {
   results: QuizResults;
   onStartOver: () => void;
-  onExploreColleges: () => void;
+  onExploreCourses: () => void;
 }
 
 interface CareerPathway {
@@ -99,7 +99,7 @@ const careerClusters: Record<string, CareerCluster> = {
   }
 };
 
-const QuizResults: React.FC<QuizResultsProps> = ({ results, onStartOver, onExploreColleges }) => {
+const QuizResults: React.FC<QuizResultsProps> = ({ results, onStartOver, onExploreCourses }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [animationStep, setAnimationStep] = useState(0);
   const [careerPathways, setCareerPathways] = useState<CareerPathway[]>([]);
@@ -267,12 +267,12 @@ const QuizResults: React.FC<QuizResultsProps> = ({ results, onStartOver, onExplo
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Button 
-            onClick={onExploreColleges}
+            onClick={onExploreCourses}
             className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-lg transform hover:scale-105 transition-all duration-300"
             size="lg"
           >
             <MapPin className="w-5 h-5 mr-2" />
-            Explore Colleges
+            Explore Courses
           </Button>
           
           <Button 
