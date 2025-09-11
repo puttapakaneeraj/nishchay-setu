@@ -1,3 +1,7 @@
-#cd nextstep
-#npm install
-#npm run dev
+#cd nextstep.
+
+
+#npm install.
+
+
+#npm run dev.
