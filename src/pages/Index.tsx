@@ -1,49 +1,51 @@
-import { useState } from 'react';
-import Navigation from '@/components/Navigation';
-import LandingPage from '@/components/LandingPage';
-import Quiz from '@/components/Quiz';
-import QuizResults from '@/components/QuizResults';
-import ChatBot from '@/components/ChatBot';
-import CourseExplorer from '@/components/CourseExplorer';
+import { useState } from "react";
+import Navigation from "@/components/Navigation";
+import LandingPage from "@/components/LandingPage";
+import Quiz from "@/components/Quiz";
+import QuizResults from "@/components/QuizResults";
+import ChatBot from "@/components/ChatBot";
+import CourseExplorer from "@/components/CourseExplorer";
 
 const Index = () => {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState("home");
   const [quizResults, setQuizResults] = useState(null);
 
   const handleQuizComplete = (results: any) => {
     setQuizResults(results);
-    setCurrentPage('results');
+    setCurrentPage("results");
   };
 
   const handleStartOver = () => {
     setQuizResults(null);
-    setCurrentPage('quiz');
+    setCurrentPage("quiz");
   };
 
   const handleExploreCourses = () => {
-    setCurrentPage('courses');
+    setCurrentPage("courses");
   };
 
   const renderCurrentPage = () => {
     switch (currentPage) {
-      case 'home':
-        return <LandingPage />;
-      case 'quiz':
+      case "home":
+        return <LandingPage onPageChange={setCurrentPage} />;
+      case "quiz":
         return <Quiz onComplete={handleQuizComplete} />;
-      case 'results':
+      case "results":
         return quizResults ? (
-          <QuizResults 
-            results={quizResults} 
+          <QuizResults
+            results={quizResults}
             onStartOver={handleStartOver}
             onExploreCourses={handleExploreCourses}
           />
-        ) : <LandingPage />;
-      case 'chat':
+        ) : (
+          <LandingPage />
+        );
+      case "chat":
         return <ChatBot />;
-      case 'courses':
+      case "courses":
         return <CourseExplorer />;
       default:
-        return <LandingPage />;
+        return <LandingPage onPageChange={setCurrentPage} />;
     }
   };
 
