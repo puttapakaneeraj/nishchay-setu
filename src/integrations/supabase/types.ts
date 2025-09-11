@@ -136,6 +136,60 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          career_paths: Json | null
+          colleges_offering: Json | null
+          course_type: string | null
+          created_at: string
+          description: string | null
+          duration: string | null
+          entrance_exams: Json | null
+          fees_range: Json | null
+          id: string
+          job_opportunities: Json | null
+          level: string
+          name: string
+          roadmap_stages: Json | null
+          specializations: Json | null
+          updated_at: string
+        }
+        Insert: {
+          career_paths?: Json | null
+          colleges_offering?: Json | null
+          course_type?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          entrance_exams?: Json | null
+          fees_range?: Json | null
+          id?: string
+          job_opportunities?: Json | null
+          level: string
+          name: string
+          roadmap_stages?: Json | null
+          specializations?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          career_paths?: Json | null
+          colleges_offering?: Json | null
+          course_type?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          entrance_exams?: Json | null
+          fees_range?: Json | null
+          id?: string
+          job_opportunities?: Json | null
+          level?: string
+          name?: string
+          roadmap_stages?: Json | null
+          specializations?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
